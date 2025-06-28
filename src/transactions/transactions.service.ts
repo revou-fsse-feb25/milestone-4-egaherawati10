@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTransactionInput } from './dto/create-transaction.input';
-import { UpdateTransactionInput } from './dto/update-transaction.input';
+import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { UpdateTransactionDto } from './dto/update-transaction.dto';
 
 @Injectable()
 export class TransactionsService {
-  create(createTransactionInput: CreateTransactionInput) {
+  create(createTransactionDto: CreateTransactionDto) {
     return 'This action adds a new transaction';
   }
 
@@ -16,7 +16,7 @@ export class TransactionsService {
     return `This action returns a #${id} transaction`;
   }
 
-  update(id: number, updateTransactionInput: UpdateTransactionInput) {
+  update(id: number, updateTransactionDto: UpdateTransactionDto) {
     return `This action updates a #${id} transaction`;
   }
 
