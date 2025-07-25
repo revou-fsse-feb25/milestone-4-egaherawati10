@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  active
+  suspended
+  closed
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum AccountType {
+  checking
+  savings
+  loan
+  deposito
+  investment
+}
+
+enum AccountStatus {
+  active
+  frozen
+  closed
+}
+
+enum TransactionType {
+  deposit
+  withdrawal
+  transfer
+  payment
+}
+
+enum TransactionStatus {
+  pending
+  success
+  failed
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  name String
+  username String @unique
+  email String @unique
+  password String
+  status UserStatus
+  role UserRole
+  accounts Account[]
+  transactions Transaction[]
+}
+
+model Account {
+  id Int @id @default(autoincrement())
+  userId Int
+  accountNumber String @unique
+  accountType AccountType
+  status AccountStatus
+  balance Decimal @default(0.00)
+  currency String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  transactions Transaction[] @relation("AccountTransactions")
+}
+
+model Transaction {
+  id Int @id @default(autoincrement())
+  userId Int
+  accountId Int
+  senderId String?
+  receiverId String?
+  type TransactionType
+  amount Decimal
+  currency String
+  description String?
+  status TransactionStatus
+  createdAt DateTime @default(now())
+  referenceNumber String? @unique
+
+  user User @relation(fields: [userId], references: [id])
+  account Account @relation("AccountTransactions", fields: [accountId], references: [id]) 
+}
