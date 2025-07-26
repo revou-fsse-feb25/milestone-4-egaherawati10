@@ -1,26 +1,35 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAccountDto } from './dto/create-account.dto';
-import { UpdateAccountDto } from './dto/update-account.dto';
+import { Injectable } from "@nestjs/common";
+import { AccountsServiceItf } from "./accounts.service.interface";
+import { Account } from "@prisma/client";
+import { AccountRepository } from "./accounts.repository";
 
 @Injectable()
-export class AccountsService {
-  create(createAccountDto: CreateAccountDto) {
-    return 'This action adds a new account';
+export class AccountsService implements AccountsServiceItf {
+  constructor(
+    private readonly accountRepository: AccountRepository
+  ) {}
+
+  getAllAccounts(): Promise<Account[]> {
+    return this.accountRepository.findAll();
   }
 
-  findAll() {
-    return `This action returns all accounts`;
+  getAccountById(id: number): Promise<Account | null> {
+    return this.accountRepository.findById(id);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} account`;
+  getAccountByUserId(userId: number): Promise<Account | null> {
+    return this.accountRepository.findByUserId(userId);
   }
 
-  update(id: number, updateAccountDto: UpdateAccountDto) {
-    return `This action updates a #${id} account`;
+  createAccount(data: any): Promise<any> {
+    return this.accountRepository.create(data);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} account`;
+  updateAccount(id: number, data: any): Promise<any> {
+    return this.accountRepository.update(id, data);
+  }
+
+  deleteAccount(id: number): Promise<void> {
+    return this.accountRepository.delete(id);
   }
 }
