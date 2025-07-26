@@ -1,26 +1,40 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { Inject, Injectable } from "@nestjs/common";
+import { Prisma, User } from "@prisma/client";
+import { UsersServiceItf } from "./users.service.interface";
+import { UsersRepositoryItf, UsersRepositoryToken } from "./users.repository.interface";
 
 @Injectable()
-export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+export class UsersService implements UsersServiceItf {
+  constructor(
+    @Inject(UsersRepositoryToken)
+    private readonly userRepository: UsersRepositoryItf
+  ) {}
+
+  getAllUsers(): Promise<User[]> {
+    return this.userRepository.findAll();
   }
 
-  findAll() {
-    return `This action returns all users`;
+  getUserById(id: number): Promise<User | null> {
+    return this.userRepository.findById(id);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  getUserByUsername(username: string): Promise<User | null> {
+    return this.userRepository.findByUsername(username);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  getUserByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findByEmail(email);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  createUser(data: Prisma.UserCreateInput): Promise<User> {
+    return this.userRepository.create(data);
+  }
+
+  updateUser(id: number, data: Prisma.UserUpdateInput): Promise<User> {
+    return this.userRepository.update(id, data);
+  }
+
+  deleteUser(id: number): Promise<void> {
+    return this.userRepository.delete(id);
   }
 }
