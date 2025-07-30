@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from "@nestjs/common";
 import { AccountsServiceItf } from "./accounts.service.interface";
 import { AccountsService } from "./accounts.service";
 import { Account } from "@prisma/client";
 import { CreateAccountDto } from "./dto/create-account.dto";
 import { UpdateAccountDto } from "./dto/update-account.dto";
+import { JwtAuthGuard } from "src/auth/jwt-auth.guard";
 
 @Controller('accounts')
 export class AccountsController {
@@ -20,6 +21,7 @@ export class AccountsController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   async getAccountById(@Param('id', ParseIntPipe) id: number): Promise<Account | null> {
     return this.accountsService.getAccountById(+id);
   }

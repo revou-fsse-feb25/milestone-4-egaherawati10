@@ -1,6 +1,6 @@
 import { AccountStatus, AccountType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
-import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsPositive, IsString } from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber, IsPositive, IsString } from "class-validator";
 
 export class CreateAccountDto {
     @IsNotEmpty()

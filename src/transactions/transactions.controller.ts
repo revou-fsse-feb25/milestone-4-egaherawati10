@@ -1,34 +1,37 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Request, UseGuards } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
-import { CreateTransactionDto } from './dto/create-transaction.dto';
-import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { DepositDto } from './dto/deposit.dto';
+import { WithdrawDto } from './dto/withdraw.dto';
+import { TransferDto } from './dto/transfer.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('transactions')
 export class TransactionsController {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(private readonly service: TransactionsService) {}
 
-  @Post()
-  create(@Body() createTransactionDto: CreateTransactionDto) {
-    return this.transactionsService.create(createTransactionDto);
+  @Post('deposit')
+  deposit(@Request() req, @Body() dto: DepositDto) {
+    return this.service.deposit(req.user.id, dto);
   }
 
+  @Post('withdraw')
+  withdraw(@Request() req, @Body() dto: WithdrawDto) {
+    return this.service.withdraw(req.user.id, dto);
+  }
+
+  // @Post('transfer')
+  // transfer(@Request() req, @Body() dto: TransferDto) {
+  //   return this.service.transfer(req.user.id, dto);
+  // }
+
   @Get()
-  findAll() {
-    return this.transactionsService.findAll();
+  list(@Request() req) {
+    return this.service.getAllByUser(req.user.id);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.transactionsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTransactionDto: UpdateTransactionDto) {
-    return this.transactionsService.update(+id, updateTransactionDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.transactionsService.remove(+id);
+  getOne(@Param('id') id: string) {
+    return this.service.getTransactionById(+id);
   }
 }

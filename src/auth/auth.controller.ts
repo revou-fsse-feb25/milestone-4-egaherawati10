@@ -1,8 +1,7 @@
 import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserRole, UserStatus } from '@prisma/client';
+import { User, UserRole, UserStatus } from '@prisma/client';
 import { LocalAuthGuard } from './local-auth.guard';
-import { User } from 'src/users/entities/user.entity';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
