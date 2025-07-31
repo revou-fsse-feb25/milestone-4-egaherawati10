@@ -4,8 +4,9 @@ import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { TransactionStatus, TransactionType } from "@prisma/client";
 import { WithdrawDto } from "./dto/withdraw.dto";
 import { TransferDto } from "./dto/transfer.dto";
+import { TransactionsServiceItf } from "./transactions.service.interface";
 
-export class TransactionsService {
+export class TransactionsService implements TransactionsServiceItf {
   constructor(private prisma: PrismaService) {}
 
   async deposit(senderId: number, dto: DepositDto) {
@@ -101,19 +102,6 @@ export class TransactionsService {
       });
     })
   }
-
-  // async getAllByUser(user: { id: number; role: string }) {
-  //   if (user.role === 'admin') {
-  //   return this.prisma.transaction.findMany({
-  //     orderBy: { createdAt: 'desc' },
-  //   });
-  // }
-
-  // return this.prisma.transaction.findMany({
-  //   where: { senderId: user.id },
-  //   orderBy: { createdAt: 'desc' },
-  //   });
-  // }
 
   async getAllByUser(userId: number, role: string) {
   if (role === 'admin') {
