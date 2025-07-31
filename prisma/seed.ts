@@ -5,12 +5,15 @@ const prisma = new PrismaClient();
 
 async function main() {
 
+    await prisma.transaction.deleteMany();
+    await prisma.account.deleteMany();
+    await prisma.user.deleteMany();
+
     const password1 = await bcrypt.hash('password123', 10);
     const password2 = await bcrypt.hash('password456', 10);
 
     const user1 = await prisma.user.create({ 
         data: { 
-            id: 1,
             name: 'Acel',
             username: 'acel',
             email: 'acel@example.com',
@@ -22,7 +25,6 @@ async function main() {
 
     const user2 = await prisma.user.create({ 
         data: { 
-            id: 2,
             name: 'Bill',
             username: 'bill',
             email: 'bill@example.com',
@@ -57,9 +59,8 @@ async function main() {
     await prisma.transaction.createMany({
         data: [
             {
-                userId: user1.id,
                 accountId: account1.id,
-                senderId: null,
+                senderId: user1.id,
                 receiverId: null,
                 type: 'deposit',
                 amount: 1000000,
@@ -68,10 +69,9 @@ async function main() {
                 description: 'Initial deposit',
             },
             {
-                userId: user1.id,
                 accountId: account1.id,
-                senderId: account1.accountNumber,
-                receiverId: 'ACC67890',
+                senderId: user1.id,
+                receiverId:user2.id,
                 type: 'transfer',
                 amount: 500000,
                 currency: 'IDR',
@@ -79,8 +79,8 @@ async function main() {
                 description: 'Split bill 24/7/25',
             },
             {
-                userId: user2.id,
                 accountId: account2.id,
+                senderId: user2.id,
                 type: 'withdrawal',
                 amount: 1000000,
                 currency: 'IDR',

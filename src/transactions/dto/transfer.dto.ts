@@ -1,22 +1,19 @@
+import { TransactionStatus, TransactionType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
-import { IsDecimal, IsNotEmpty, IsNumber, IsPositive, IsString } from "class-validator";
+import { IsDecimal, IsEnum, IsInt, IsNotEmpty, IsPositive, IsString } from "class-validator";
 
 export class TransferDto {
     @IsNotEmpty()
-    @IsNumber()
-    userId: number;
-
-    @IsNotEmpty()
-    @IsNumber()
+    @IsInt()
     accountId: number;
 
     @IsNotEmpty()
-    @IsString()
-    senderId: string;
+    @IsInt()
+    receiverId: number;
 
     @IsNotEmpty()
-    @IsString()
-    receiverId: string;
+    @IsEnum(TransactionType)
+    type: TransactionType = TransactionType.transfer;
 
     @IsNotEmpty()
     @IsDecimal()
@@ -29,4 +26,11 @@ export class TransferDto {
 
     @IsString()
     description: string;
+
+    @IsNotEmpty()
+    @IsEnum(TransactionStatus)
+    status: TransactionStatus
+
+    @IsString()
+    referenceNumber: string
 }

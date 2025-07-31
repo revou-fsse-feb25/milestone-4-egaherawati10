@@ -59,8 +59,10 @@ model User {
   password String
   status UserStatus
   role UserRole
+
   accounts Account[]
-  transactions Transaction[]
+  sentTransactions Transaction[] @relation("SentTransactions")
+  receivedTransactions Transaction[] @relation("ReceivedTransactions")
 }
 
 model Account {
@@ -79,10 +81,9 @@ model Account {
 
 model Transaction {
   id Int @id @default(autoincrement())
-  userId Int
   accountId Int
-  senderId String?
-  receiverId String?
+  senderId Int
+  receiverId Int?
   type TransactionType
   amount Decimal
   currency String
@@ -91,6 +92,7 @@ model Transaction {
   createdAt DateTime @default(now())
   referenceNumber String? @unique
 
-  user User @relation(fields: [userId], references: [id])
   account Account @relation("AccountTransactions", fields: [accountId], references: [id]) 
+  sender User @relation("SentTransactions", fields: [senderId], references: [id])
+  receiver User? @relation("ReceivedTransactions", fields: [receiverId], references: [id])
 }
