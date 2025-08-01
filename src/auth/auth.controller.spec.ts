@@ -1,93 +1,85 @@
-// import { Test, TestingModule } from '@nestjs/testing';
-// import { AuthController } from './auth.controller';
-// import { AuthService } from './auth.service';
-// import { User, UserRole, UserStatus } from '@prisma/client';
+import { Test, TestingModule } from '@nestjs/testing';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { RegisterDto } from './dto/register.dto';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { UserRole, UserStatus } from '@prisma/client';
 
-// describe('AuthController', () => {
-//   let controller: AuthController;
-//   let authService: jest.Mocked<AuthService>;
+describe('AuthController', () => {
+  let controller: AuthController;
+  let authService: AuthService;
 
-//   const mockUser: User = {
-//     id: 1,
-//     name: 'Test User',
-//     username: 'testuser',
-//     email: 'test@example.com',
-//     password: 'hashed-password',
-//     status: UserStatus.active,
-//     role: UserRole.admin,
-//   };
+  const mockAuthService = {
+    register: jest.fn(),
+    login: jest.fn(),
+  };
 
-//   beforeEach(async () => {
-//     const module: TestingModule = await Test.createTestingModule({
-//       controllers: [AuthController],
-//       providers: [
-//         {
-//           provide: AuthService,
-//           useValue: {
-//             register: jest.fn(),
-//             login: jest.fn(),
-//           },
-//         },
-//       ],
-//     }).compile();
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AuthController],
+      providers: [
+        {
+          provide: AuthService,
+          useValue: mockAuthService,
+        },
+      ],
+    }).compile();
 
-//     controller = module.get<AuthController>(AuthController);
-//     authService = module.get(AuthService);
-//   });
+    controller = module.get<AuthController>(AuthController);
+    authService = module.get<AuthService>(AuthService);
+  });
 
-//   describe('register', () => {
-//     it('should call authService.register and return result', async () => {
-//       const dto = {
-//         name: 'New User',
-//         username: 'newuser',
-//         email: 'new@example.com',
-//         password: 'password123',
-//         status: UserStatus.active,
-//         role: UserRole.user,
-//       };
+  describe('register', () => {
+    const dto: RegisterDto = {
+      name: 'John Doe',
+      username: 'johndoe',
+      email: 'john@example.com',
+      password: 'securepass123',
+      status: UserStatus.active,
+      role: UserRole.user,
+    };
 
-//       const expected = { ...dto, id: 2 };
-//       authService.register.mockResolvedValue(expected);
+    it('should register a user successfully', async () => {
+      const expected = { id: 1, ...dto, password: undefined };
+      mockAuthService.register.mockResolvedValue(expected);
 
-//       const result = await controller.register(dto);
-//       expect(authService.register).toHaveBeenCalledWith(
-//         dto.name,
-//         dto.username,
-//         dto.email,
-//         dto.password,
-//         dto.status,
-//         dto.role,
-//       );
-//       expect(result).toEqual(expected);
-//     });
-//   });
+      const result = await controller.register(dto);
+      expect(result).toEqual(expected);
+      expect(mockAuthService.register).toHaveBeenCalledWith(dto);
+    });
 
-//   describe('login', () => {
-//     it('should return login result from authService', async () => {
-//       const expectedToken = {
-//         access_token: 'mocked-jwt-token',
-//         user: {
-//           id: mockUser.id,
-//           name: mockUser.name,
-//           email: mockUser.email,
-//         },
-//       };
+    it('should throw BadRequestException on duplicate email or username', async () => {
+      mockAuthService.register.mockRejectedValue(new ConflictException());
 
-//       authService.login.mockReturnValue(expectedToken);
+      await expect(controller.register(dto)).rejects.toThrow('Email or username already exists');
+    });
+  });
 
-//       const req = { user: mockUser };
-//       const result = controller.login(req);
+  describe('login', () => {
+    const mockUser = {
+      id: 1,
+      name: 'John',
+      email: 'john@example.com',
+      role: UserRole.user,
+    };
 
-//       expect(authService.login).toHaveBeenCalledWith(mockUser);
-//       expect(result).toEqual(expectedToken);
-//     });
-//   });
+    const mockTokenResponse = {
+      access_token: 'mocked.jwt.token',
+      user: mockUser,
+    };
 
-//   describe('getProfile', () => {
-//     it('should return the current user profile', () => {
-//       const req = { user: mockUser };
-//       const result = controller.getProfile(req);
-//       expect(result).toEqual(mockUser);
-//     });
-//   });
-// });
+    it('should return access token on successful login', async () => {
+      mockAuthService.login.mockResolvedValue(mockTokenResponse);
+
+      const req = { user: mockUser };
+      const result = await controller.login(req as any);
+
+      expect(result).toEqual(mockTokenResponse);
+      expect(mockAuthService.login).toHaveBeenCalledWith(mockUser);
+    });
+
+    it('should throw UnauthorizedException if no user is present', async () => {
+      await expect(controller.login({} as any)).rejects.toThrow(UnauthorizedException);
+    });
+  });
+});

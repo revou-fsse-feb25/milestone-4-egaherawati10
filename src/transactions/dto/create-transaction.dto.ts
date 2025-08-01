@@ -1,6 +1,6 @@
 import { TransactionStatus, TransactionType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
-import { IsDecimal, IsEnum, IsNotEmpty, isNumber, IsNumber, IsString } from "class-validator";
+import { IsDecimal, IsEnum, IsNotEmpty, isNumber, IsNumber, IsPositive, IsString } from "class-validator";
 
 export class CreateTransactionDto {
     @IsNotEmpty()
@@ -23,6 +23,7 @@ export class CreateTransactionDto {
 
     @IsNotEmpty()
     @IsDecimal()
+    @IsPositive()
     amount: Decimal;
 
     @IsNotEmpty()

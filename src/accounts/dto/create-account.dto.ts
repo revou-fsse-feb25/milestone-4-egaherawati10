@@ -1,6 +1,6 @@
 import { AccountStatus, AccountType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
-import { IsEnum, IsNotEmpty, IsNumber, IsPositive, IsString } from "class-validator";
+import { IsDecimal, IsEnum, IsNotEmpty, IsNumber, IsPositive, IsString } from "class-validator";
 
 export class CreateAccountDto {
     @IsNotEmpty()
@@ -20,7 +20,7 @@ export class CreateAccountDto {
     status: AccountStatus;
 
     @IsNotEmpty()
-    @IsNumber({ maxDecimalPlaces: 2 }, { message: "Balance must be a number with up to 2 decimal places" })
+    @IsDecimal({ decimal_digits: '0,2' }, { message: "Balance must be a number with up to 2 decimal places" })
     @IsPositive()
     balance: Decimal;
 

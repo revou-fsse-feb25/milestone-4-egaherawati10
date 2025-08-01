@@ -5,25 +5,25 @@ import {
   Request,
   UseGuards,
   BadRequestException,
+  ConflictException,
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { RegisterDto } from './dto/register.dto';
 import { LocalAuthGuard } from './local-auth.guard';
 import { User } from '@prisma/client';
-import { RegisterDto } from './dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() body: RegisterDto) {
+  async register(@Body() dto: RegisterDto) {
     try {
-      const { name, username, email, password, status, role } = body;
-      return await this.authService.register(name, username, email, password, status, role);
+      return await this.authService.register(dto);
     } catch (error) {
-      if (error.code === 'P2002') {
+      if (error instanceof ConflictException) {
         throw new BadRequestException('Email or username already exists');
       }
       throw new InternalServerErrorException('Registration failed');
@@ -33,11 +33,12 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Request() req: { user: User }) {
+    if (!req.user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     try {
-      if (!req.user) {
-        throw new UnauthorizedException('Invalid credentials');
-      }
-      return await this.authService.login(req.user);
+      return this.authService.login(req.user);
     } catch (error) {
       throw new InternalServerErrorException('Login failed');
     }
