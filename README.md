@@ -9,15 +9,15 @@ This is an overview of RevoBank backend. The features, tech stacks, and demo of 
 ## Features
 
 * Security
-- Bcrypt for password security
-
-
+* Bcrypt for password security
 
 
 ## Technologies Used
 
 * Nest JS for building server-side applications
 * DBeaver for database with postgreSQL
+* Supabase for deploying database
+* Railway for deploying back end
 
 
 ## How to use
@@ -38,7 +38,8 @@ This is an overview of RevoBank backend. The features, tech stacks, and demo of 
 
 ## Deployed Website :
 
-> 
+> https://milestone-4-egaherawati10-production.up.railway.app/
+
 
 ## Previews
 
@@ -53,6 +54,7 @@ User Login
 
 Get All Users
 ![alt text](image-3.png)
+
 
 ## Creator
 Build with &#x2661; by Ega Herawati, 2025
