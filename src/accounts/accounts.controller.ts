@@ -12,7 +12,7 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
 import { UserRole } from 'src/common/enums/role.enum';
 
 @Controller('accounts')
-@UseGuards(JwtAuthGuard, RolesGuard) // Apply both guards globally
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class AccountsController {
   constructor(private readonly accountsService: AccountsService) {}
 

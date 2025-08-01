@@ -49,7 +49,6 @@ export class AccountsService implements AccountsServiceItf {
     const existing = await this.accountRepository.findById(id);
     if (!existing) throw new NotFoundException(`Account with ID ${id} not found`);
 
-    // RBAC: Only account owner or admin can update
     if (existing.userId !== user.id && user.role !== 'admin') {
       throw new ForbiddenException('You are not allowed to update this account');
     }
