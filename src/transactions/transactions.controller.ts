@@ -1,40 +1,87 @@
-import { Controller, Post, Body, Param, Get, Request, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Param,
+  Get,
+  UseGuards,
+  ParseIntPipe,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { DepositDto } from './dto/deposit.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { TransferDto } from './dto/transfer.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { User } from '@prisma/client';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('transactions')
 export class TransactionsController {
   constructor(private readonly service: TransactionsService) {}
 
   @Post('deposit')
-  deposit(@Request() req, @Body() dto: DepositDto) {
-    return this.service.deposit(req.user.id, dto);
+  async deposit(@CurrentUser() user: User, @Body() dto: DepositDto) {
+    try {
+      return await this.service.deposit(user.id, dto);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Post('withdraw')
-  withdraw(@Request() req, @Body() dto: WithdrawDto) {
-    return this.service.withdraw(req.user.id, dto);
+  async withdraw(@CurrentUser() user: User, @Body() dto: WithdrawDto) {
+    try {
+      return await this.service.withdraw(user.id, dto);
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Post('transfer')
-  transfer(@Req() req, @Body() dto: TransferDto) {
-    return this.service.transfer(req.user.id, dto);
+  async transfer(@CurrentUser() user: User, @Body() dto: TransferDto) {
+    try {
+      return await this.service.transfer(user.id, dto);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Get()
-  @Roles('admin', 'user')
-  list(@CurrentUser() user: any) {
-    return this.service.getAllByUser(user.id, user.role);
+  async list(@CurrentUser() user: User) {
+    try {
+      return await this.service.getAllByUser(user.id, user.role);
+    } catch (error) {
+      throw new BadRequestException('Failed to fetch transactions');
+    }
   }
 
   @Get(':id')
-  getOne(@Param('id') id: string) {
-    return this.service.getTransactionById(+id);
+  async getOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    try {
+      return await this.service.getTransactionById(id, user.id, user.role);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Could not retrieve transaction');
+    }
   }
 }

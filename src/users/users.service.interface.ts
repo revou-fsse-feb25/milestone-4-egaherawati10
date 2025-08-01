@@ -6,6 +6,6 @@ export interface UsersServiceItf {
   getUserByUsername(username: string): Promise<User | null>;
   getUserByEmail(email: string): Promise<User | null>;
   createUser(data: Prisma.UserCreateInput): Promise<User>;
-  updateUser(id: number, data: Prisma.UserUpdateInput): Promise<User>;
+  updateUser(id: number, data: Prisma.UserUpdateInput, requesterId: number, requesterRole: string): Promise<User>;
   deleteUser(id: number): Promise<void>;
 }

@@ -1,36 +1,55 @@
-import { PrismaService } from "src/prisma/prisma.service";
-import { DepositDto } from "./dto/deposit.dto";
-import { BadRequestException, NotFoundException } from "@nestjs/common";
-import { TransactionStatus, TransactionType } from "@prisma/client";
-import { WithdrawDto } from "./dto/withdraw.dto";
-import { TransferDto } from "./dto/transfer.dto";
-import { TransactionsServiceItf } from "./transactions.service.interface";
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { DepositDto } from './dto/deposit.dto';
+import { WithdrawDto } from './dto/withdraw.dto';
+import { TransferDto } from './dto/transfer.dto';
+import { TransactionStatus, TransactionType } from '@prisma/client';
+import { TransactionsServiceItf } from './transactions.service.interface';
 
 export class TransactionsService implements TransactionsServiceItf {
   constructor(private prisma: PrismaService) {}
 
   async deposit(senderId: number, dto: DepositDto) {
-    const account = await this.prisma.account.findUnique({ where: { id: dto.accountId } });
-    if (!account) throw new NotFoundException('Account not found');
-
-    await this.prisma.account.update({ where: { id: dto.accountId },
-    data: { balance: { increment: dto.amount } },
+    const account = await this.prisma.account.findUnique({
+      where: { id: dto.accountId },
     });
-    return this.prisma.transaction.create({ 
-      data: { 
-        senderId, 
-        accountId: dto.accountId, 
+
+    if (!account) throw new NotFoundException('Account not found');
+    if (account.userId !== senderId)
+      throw new ForbiddenException('You can only deposit to your own account');
+
+    await this.prisma.account.update({
+      where: { id: dto.accountId },
+      data: { balance: { increment: dto.amount } },
+    });
+
+    return this.prisma.transaction.create({
+      data: {
+        senderId,
+        accountId: dto.accountId,
         type: TransactionType.deposit,
         amount: dto.amount,
         currency: dto.currency,
         status: TransactionStatus.success,
-       }, 
-      });
+      },
+    });
   }
 
   async withdraw(senderId: number, dto: WithdrawDto) {
-    const account = await this.prisma.account.findUnique({ where: { id: dto.accountId } });
-    if (!account || account.balance < dto.amount) throw new NotFoundException('Account not found');
+    const account = await this.prisma.account.findUnique({
+      where: { id: dto.accountId },
+    });
+
+    if (!account) throw new NotFoundException('Account not found');
+    if (account.userId !== senderId)
+      throw new ForbiddenException('You can only withdraw from your own account');
+
+    if (account.balance < dto.amount)
+      throw new BadRequestException('Insufficient balance');
 
     await this.prisma.account.update({
       where: { id: dto.accountId },
@@ -50,31 +69,39 @@ export class TransactionsService implements TransactionsServiceItf {
   }
 
   async transfer(senderId: number, dto: TransferDto) {
-    const { receiverId, accountId, amount, currency, description, referenceNumber } = dto;
+    const {
+      receiverId,
+      accountId,
+      amount,
+      currency,
+      description,
+      referenceNumber,
+    } = dto;
 
-    const sender = await this.prisma.user.findUnique({ 
-      where: { id: senderId }, 
+    const sender = await this.prisma.user.findUnique({
+      where: { id: senderId },
     });
     if (!sender) throw new NotFoundException('Sender not found');
 
-    const senderAccount = await this.prisma.account.findFirst({ 
+    const senderAccount = await this.prisma.account.findFirst({
       where: { id: accountId, userId: senderId },
     });
-    if (!senderAccount) throw new NotFoundException('Sender account not found');
+    if (!senderAccount)
+      throw new ForbiddenException('You can only transfer from your own account');
 
-    if (senderAccount.balance < amount) {
+    if (senderAccount.balance < amount)
       throw new BadRequestException('Insufficient balance');
-    };
 
-    const receiver = await this.prisma.user.findUnique({ 
-      where: { id: receiverId }, 
+    const receiver = await this.prisma.user.findUnique({
+      where: { id: receiverId },
     });
     if (!receiver) throw new NotFoundException('Receiver not found');
 
     const receiverAccount = await this.prisma.account.findFirst({
-      where: {id: accountId, userId: receiverId, status: 'active'},
+      where: { userId: receiverId, status: 'active' },
     });
-    if (!receiverAccount) throw new NotFoundException('Receiver account not found');
+    if (!receiverAccount)
+      throw new NotFoundException('Receiver account not found');
 
     return this.prisma.$transaction(async (tx) => {
       await tx.account.update({
@@ -100,22 +127,29 @@ export class TransactionsService implements TransactionsServiceItf {
           referenceNumber,
         },
       });
-    })
+    });
   }
 
   async getAllByUser(userId: number, role: string) {
-  if (role === 'admin') {
-    return this.prisma.transaction.findMany();
+    if (role === 'admin') {
+      return this.prisma.transaction.findMany();
+    }
+
+    return this.prisma.transaction.findMany({
+      where: {
+        OR: [{ senderId: userId }, { receiverId: userId }],
+      },
+    });
   }
 
-  return this.prisma.transaction.findMany({
-    where: {
-      OR: [{ senderId: userId }, { receiverId: userId }],
-    },
-  });
-}
+  async getTransactionById(id: number, userId: number, role: string) {
+    const trx = await this.prisma.transaction.findUnique({ where: { id } });
+    if (!trx) throw new NotFoundException('Transaction not found');
 
-  async getTransactionById(id: number) {
-    return this.prisma.transaction.findUnique({ where: { id } });
+    if (role !== 'admin' && trx.senderId !== userId && trx.receiverId !== userId) {
+      throw new ForbiddenException('You are not authorized to view this transaction');
+    }
+
+    return trx;
   }
 }

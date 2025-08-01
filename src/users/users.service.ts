@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { ForbiddenException, Inject, Injectable } from "@nestjs/common";
 import { Prisma, User } from "@prisma/client";
 import { UsersServiceItf } from "./users.service.interface";
 import { UsersRepositoryItf, UsersRepositoryToken } from "./users.repository.interface";
@@ -30,7 +30,15 @@ export class UsersService implements UsersServiceItf {
     return this.userRepository.create(data);
   }
 
-  updateUser(id: number, data: Prisma.UserUpdateInput): Promise<User> {
+  async updateUser(
+    id: number,
+    data: Prisma.UserUpdateInput,
+    requesterId: number,
+    requesterRole: string
+  ): Promise<User> {
+    if (requesterRole !== 'admin' && requesterId !== id) {
+      throw new ForbiddenException('You can only update your own account');
+    }
     return this.userRepository.update(id, data);
   }
 
