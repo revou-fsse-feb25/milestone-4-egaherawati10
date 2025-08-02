@@ -1,42 +1,36 @@
-import { TransactionStatus, TransactionType } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime/library";
-import { IsDecimal, IsEnum, IsNotEmpty, isNumber, IsNumber, IsPositive, IsString } from "class-validator";
+import { IsDecimal, IsEnum, IsInt, IsOptional, IsPositive, IsString } from 'class-validator';
+import { TransactionType, TransactionStatus } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 export class CreateTransactionDto {
-    @IsNotEmpty()
-    @IsNumber()
-    userId: number;
+  @IsInt()
+  accountId: number;
 
-    @IsNotEmpty()
-    @IsNumber()
-    accountId: number;
+  @IsInt()
+  senderId: number;
 
-    @IsString()
-    senderId: string;
+  @IsOptional()
+  @IsInt()
+  receiverId?: number;
 
-    @IsString()
-    receiverId: string;
+  @IsEnum(TransactionType)
+  type?: TransactionType;
 
-    @IsNotEmpty()
-    @IsEnum(TransactionType)
-    type: TransactionType;
+  @IsPositive()
+  @IsDecimal()
+  amount: Decimal;
 
-    @IsNotEmpty()
-    @IsDecimal()
-    @IsPositive()
-    amount: Decimal;
+  @IsString()
+  currency: string;
 
-    @IsNotEmpty()
-    @IsString()
-    currency: string;
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-    @IsString()
-    description: string;
+  @IsEnum(TransactionStatus)
+  status?: TransactionStatus;
 
-    @IsNotEmpty()
-    @IsEnum(TransactionStatus)
-    status: TransactionStatus;
-
-    @IsString()
-    referenceNumber: string;
+  @IsOptional()
+  @IsString()
+  referenceNumber?: string;
 }

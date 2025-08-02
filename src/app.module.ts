@@ -6,9 +6,24 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { AccountsModule } from './accounts/accounts.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
-  imports: [UsersModule, TransactionsModule, AccountsModule, AuthModule, PrismaModule],
+  imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 10,
+        },
+      ],
+    }),
+    UsersModule, 
+    TransactionsModule, 
+    AccountsModule, 
+    AuthModule, 
+    PrismaModule
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

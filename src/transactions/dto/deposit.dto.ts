@@ -1,31 +1,27 @@
-import {TransactionStatus, TransactionType } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime/library";
-import { IsDecimal, IsEnum, IsInt, IsNotEmpty, IsNumber, IsPositive, IsString } from "class-validator";
+import { IsInt, IsPositive, IsString, IsOptional, IsEnum, IsDecimal } from 'class-validator';
+import { TransactionType, TransactionStatus } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 export class DepositDto {
-    
-    @IsNotEmpty()
-    @IsInt()
-    accountId: number;
+  @IsInt()
+  accountId: number;
 
-    @IsNotEmpty()
-    @IsInt()
-    senderId: number;
+  @IsPositive()
+  @IsDecimal()
+  amount: Decimal;
 
-    @IsNotEmpty()
-    @IsEnum(TransactionType)
-    type: TransactionType = TransactionType.deposit;
+  @IsString()
+  currency: string;
 
-    @IsNotEmpty()
-    @IsDecimal()
-    @IsPositive()
-    amount: Decimal;
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-    @IsNotEmpty()
-    @IsString()
-    currency: string;
+  @IsOptional()
+  @IsEnum(TransactionType)
+  type: TransactionType = TransactionType.deposit;
 
-    @IsNotEmpty()
-    @IsEnum(TransactionStatus)
-    status: TransactionStatus;
+  @IsOptional()
+  @IsEnum(TransactionStatus)
+  status: TransactionStatus = TransactionStatus.success;
 }

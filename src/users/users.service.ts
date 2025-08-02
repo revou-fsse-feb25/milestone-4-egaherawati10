@@ -45,4 +45,15 @@ export class UsersService implements UsersServiceItf {
   deleteUser(id: number): Promise<void> {
     return this.userRepository.delete(id);
   }
+
+  async getProfile(userId: number): Promise<Omit<User, 'password'>> {
+    const user = await this.getUserById(userId);
+
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
+
+    const { password, ...profile } = user;
+    return profile;
+  }
 }

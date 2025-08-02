@@ -1,36 +1,38 @@
-import { TransactionStatus, TransactionType } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime/library";
-import { IsDecimal, IsEnum, IsInt, IsNotEmpty, IsPositive, IsString } from "class-validator";
+import { IsInt, IsPositive, IsString, IsOptional, IsEnum, NotEquals, IsDecimal } from 'class-validator';
+import { TransactionType, TransactionStatus } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 export class TransferDto {
-    @IsNotEmpty()
-    @IsInt()
-    accountId: number;
+  @IsInt()
+  senderId: number;
 
-    @IsNotEmpty()
-    @IsInt()
-    receiverId: number;
+  @IsInt()
+  @NotEquals('senderId', { message: 'Receiver ID must be different from sender ID' })
+  receiverId: number;
 
-    @IsNotEmpty()
-    @IsEnum(TransactionType)
-    type: TransactionType = TransactionType.transfer;
+  @IsInt()
+  accountId: number;
 
-    @IsNotEmpty()
-    @IsDecimal()
-    @IsPositive()
-    amount: Decimal;
+  @IsPositive()
+  @IsDecimal()
+  amount: Decimal;
 
-    @IsNotEmpty()
-    @IsString()
-    currency: string;
+  @IsString()
+  currency: string;
 
-    @IsString()
-    description: string;
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-    @IsNotEmpty()
-    @IsEnum(TransactionStatus)
-    status: TransactionStatus
+  @IsOptional()
+  @IsEnum(TransactionType)
+  type?: TransactionType = TransactionType.transfer;
 
-    @IsString()
-    referenceNumber: string
+  @IsOptional()
+  @IsEnum(TransactionStatus)
+  status?: TransactionStatus;
+
+  @IsOptional()
+  @IsString()
+  referenceNumber?: string
 }
